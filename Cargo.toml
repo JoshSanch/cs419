@@ -1,7 +1,8 @@
 [package]
 name = "jesway_raytracer"
 version = "0.1.0"
-authors = ['jsanch84']
+authors = ["jsanch84"]
+edition = "2018"
 
 [dependencies]
 png = "0.16.8"
