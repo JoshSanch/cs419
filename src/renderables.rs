@@ -1,7 +1,18 @@
 use super::color::Material;
 use super::rays::Point3;
+use super::rays::Ray;
 
 use nalgebra::Vector3;
+use float_eq::float_eq;
+
+/**
+ * Trait to support determining if a ray intersects an object, and if so, at what time.
+ */
+pub trait Collision {
+    /// Determines the time that the given ray intersects the object. If there is no intersection, then 
+    /// return None.
+    fn calc_intersect_time(&self, ray: &Ray) -> Option<f64>;
+}
 
 /**
  * Sphere object for rendering spheres.
@@ -39,6 +50,20 @@ impl Plane {
             origin: orig,
             normal_vec: normal,
             mat: material
+        }
+    }
+}
+
+impl Collision for Plane {
+    fn calc_intersect_time(&self, ray: &Ray) -> Option<f64> {
+        // Check if the plane and pixel ray are parallel, which is a sign that they do not intersect.
+        let determinant = ray.dir.dot(&self.normal_vec);
+        if float_eq!(determinant, 0., abs <= 0.0000000001) {
+            None 
+        } else {
+            let top = &(self.origin - ray.orig).dot(&self.normal_vec);
+            let bottom = determinant;
+            return Some(top / bottom)
         }
     }
 }
