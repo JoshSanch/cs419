@@ -3,8 +3,8 @@ use nalgebra::Vector3;
 pub type Point3 = Vector3<f64>;
 
 pub struct Ray {
-    orig: Point3,
-    dir: Vector3<f64>,
+    pub orig: Point3,
+    pub dir: Vector3<f64>,
 }
 
 impl Ray { 
