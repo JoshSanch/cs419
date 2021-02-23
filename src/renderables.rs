@@ -6,12 +6,15 @@ use nalgebra::Vector3;
 use float_eq::float_eq;
 
 /**
- * Trait to support determining if a ray intersects an object, and if so, at what time.
+ * Interface that contains essential rendering methods for any object that appears in a scene.
  */
-pub trait Collision {
+pub trait SceneObject {
     /// Determines the time that the given ray intersects the object. If there is no intersection, then 
     /// return None.
     fn calc_intersect_time(&self, ray: &Ray) -> Option<Vec<f64>>;
+
+    /// Generic getter for accessing the unique material from a scene.
+    fn get_material(&self) -> &Material;
 }
 
 /**
@@ -34,26 +37,30 @@ impl Sphere {
     }
 }
 
-impl Collision for Sphere {
+impl SceneObject for Sphere {
     fn calc_intersect_time(&self, ray: &Ray) -> Option<Vec<f64>> {
         let f = ray.orig - self.origin;
         let a = ray.dir.dot(&ray.dir);
         let b = 2. * (f.dot(&ray.dir));
         let c = f.dot(&f) - self.radius.powi(2);
 
-        let determinant = b.powi(2) - 4. * a * c;
-        if determinant < 0. {
+        let discriminant = b.powi(2) - 4. * a * c;
+        if discriminant < 0. {
             None
-        } else if float_eq!(determinant, 0., abs <= 0.0000000001) {
+        } else if float_eq!(discriminant, 0., abs <= 0.0000000001) {
             // Single intersection point
             let t = (-1. * b) / (2. * a);
             Some(vec!(t))
         } else {
             // Two intersection points
-            let t_0 = (-1. * b - determinant.sqrt()) / (2. * a);
-            let t_1 = (-1. * b + determinant.sqrt()) / (2. * a);
+            let t_0 = (-1. * b - discriminant.sqrt()) / (2. * a);
+            let t_1 = (-1. * b + discriminant.sqrt()) / (2. * a);
             Some(vec!(t_0, t_1))
         }
+    }
+
+    fn get_material(&self) -> &Material {
+        &self.mat
     }
 }
 
@@ -77,17 +84,21 @@ impl Plane {
     }
 }
 
-impl Collision for Plane {
+impl SceneObject for Plane {
     fn calc_intersect_time(&self, ray: &Ray) -> Option<Vec<f64>> {
         // Check if the plane and pixel ray are parallel, which is a sign that they do not intersect.
-        let determinant = ray.dir.dot(&self.normal_vec);
-        if float_eq!(determinant, 0., abs <= 0.0000000001) {
+        let discriminant = ray.dir.dot(&self.normal_vec);
+        if float_eq!(discriminant, 0., abs <= 0.0000000001) {
             None 
         } else {
             let top = &(self.origin - ray.orig).dot(&self.normal_vec);
-            let bottom = determinant;
+            let bottom = discriminant;
             return Some(vec!(top / bottom))
         }
+    }
+
+    fn get_material(&self) -> &Material {
+        &self.mat
     }
 }
 
@@ -113,7 +124,7 @@ impl Triangle {
     }
 }
 
-impl Collision for Triangle {
+impl SceneObject for Triangle {
     fn calc_intersect_time(&self, ray: &Ray) -> Option<Vec<f64>> {
         // Adapted from https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
         let epsilon = 0.0000001;
@@ -142,5 +153,9 @@ impl Collision for Triangle {
         } else {
             return Some(vec!(f * edge2.dot(&q)));
         }
+    }
+
+    fn get_material(&self) -> &Material {
+        &self.mat
     }
 }
