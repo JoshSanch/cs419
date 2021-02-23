@@ -1,13 +1,13 @@
 use nalgebra::Vector3;
 
-pub type Color = Vector3<i32>;
+pub type Color = Vector3<u8>;
 
 pub struct Material {
-    base_color: Color
+   pub base_color: Color
 }
 
 impl Material {
-    pub fn new(r: i32, g: i32, b: i32) -> Material {
+    pub fn new(r: u8, g: u8, b: u8) -> Material {
         Material {
             base_color: Color::new(r, g, b)
         }
