@@ -1,7 +1,18 @@
 use super::color::Material;
 use super::rays::Point3;
+use super::rays::Ray;
 
 use nalgebra::Vector3;
+use float_eq::float_eq;
+
+/**
+ * Trait to support determining if a ray intersects an object, and if so, at what time.
+ */
+pub trait Collision {
+    /// Determines the time that the given ray intersects the object. If there is no intersection, then 
+    /// return None.
+    fn calc_intersect_time(&self, ray: &Ray) -> Option<Vec<f64>>;
+}
 
 /**
  * Sphere object for rendering spheres.
@@ -20,6 +31,29 @@ impl Sphere {
            radius: rad,
            mat: material
        } 
+    }
+}
+
+impl Collision for Sphere {
+    fn calc_intersect_time(&self, ray: &Ray) -> Option<Vec<f64>> {
+        let f = ray.orig - self.origin;
+        let a = ray.dir.dot(&ray.dir);
+        let b = 2. * (f.dot(&ray.dir));
+        let c = f.dot(&f) - self.radius.powi(2);
+
+        let determinant = b.powi(2) - 4. * a * c;
+        if determinant < 0. {
+            None
+        } else if float_eq!(determinant, 0., abs <= 0.0000000001) {
+            // Single intersection point
+            let t = (-1. * b) / (2. * a);
+            Some(vec!(t))
+        } else {
+            // Two intersection points
+            let t_0 = (-1. * b - determinant.sqrt()) / (2. * a);
+            let t_1 = (-1. * b + determinant.sqrt()) / (2. * a);
+            Some(vec!(t_0, t_1))
+        }
     }
 }
 
@@ -43,6 +77,20 @@ impl Plane {
     }
 }
 
+impl Collision for Plane {
+    fn calc_intersect_time(&self, ray: &Ray) -> Option<Vec<f64>> {
+        // Check if the plane and pixel ray are parallel, which is a sign that they do not intersect.
+        let determinant = ray.dir.dot(&self.normal_vec);
+        if float_eq!(determinant, 0., abs <= 0.0000000001) {
+            None 
+        } else {
+            let top = &(self.origin - ray.orig).dot(&self.normal_vec);
+            let bottom = determinant;
+            return Some(vec!(top / bottom))
+        }
+    }
+}
+
 /**
  * Triangle object for rendering triangles.
  * Triangles are defined by three points.
@@ -61,6 +109,38 @@ impl Triangle {
             point_two: p2,
             point_three: p3,
             mat: material
+        }
+    }
+}
+
+impl Collision for Triangle {
+    fn calc_intersect_time(&self, ray: &Ray) -> Option<Vec<f64>> {
+        // Adapted from https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
+        let epsilon = 0.0000001;
+        let edge1 = self.point_two - self.point_one;
+        let edge2 = self.point_three - self.point_one;
+        let h = ray.dir.cross(&edge2);
+        let a = edge1.dot(&h);
+
+        if float_eq!(a, 0., abs <= epsilon) {
+            return None;
+        }
+
+        let f = 1.0 / a;
+        let s = ray.orig - self.point_one;
+        let u = f * s.dot(&h);
+
+        if u < 0.0 || u > 1.0 {
+            return None;
+        }
+
+        let q = s.cross(&edge1);
+        let v = f * ray.dir.dot(&q);
+
+        if v < 0.0 || u + v > 1.0 {
+            return None;
+        } else {
+            return Some(vec!(f * edge2.dot(&q)));
         }
     }
 }
