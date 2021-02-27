@@ -3,7 +3,7 @@ use std::fs::File;
 use std::io::BufWriter;
 use png::Encoder;
 
-fn render_image(img_height: u32, img_width: u32, pixel_values: &[u8], file_path: String) {
+pub fn render_image(img_height: u32, img_width: u32, pixel_values: &[u8], file_path: &str) {
     let rgba_byte_cnt: u32 = 3;
 
     // Make sure that each pixel has an RGBA value for valid rendering
