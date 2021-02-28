@@ -26,16 +26,22 @@ impl Scene {
                             lowest_time = time;
                         }
                     }
-
+                    
+                    if lowest_time < 0. {
+                        continue
+                    }
                     intersections.insert(0, (obj, lowest_time));
                 }
             }            
         }
 
+        //println!("{:?}", intersections);
+
         if intersections.len() == 0 {
             return None;
         }
 
+        /* Sort to get object closest to the camera */
         intersections.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
         return Some(intersections[0].0);  // Return ref to scene obj closest to cam in view
     }
