@@ -21,23 +21,23 @@ use color::Color;
 fn main() {
     // Min assignment spec for MP1 is 500x500 image resolution
     let image_height: u32 = 500;
-    let image_width: u32 = 500;
+    let image_width: u32 = 900;
 
     /* Initialize objects for rendering in the scene. */
     let sphere = Sphere::new(
-        Point3::new(0., 3., 3.), 
+        Point3::new(0., 0., -5.), 
         0.5,
-        Material::new(0, 0, 255)
+        Material::new(0, 0, 200)
     );
     let plane = Plane::new(
-        Point3::new(0., 0.5, 0.), 
+        Point3::new(0., 0., 0.), 
         Vector3::new(0., 1., 0.), 
         Material::new(255, 0, 0)
     );
     let triangle = Triangle::new(
-        Point3::new(1., 2., 2.),
-        Point3::new(1., 3., 1.),
-        Point3::new(2., 2., 2.),
+        Point3::new(1., 2., -2.),
+        Point3::new(1., 3., -1.),
+        Point3::new(2., 2., -2.),
         Material::new(0, 255, 0)
     );
 
@@ -45,38 +45,66 @@ fn main() {
     let scene = Scene::new(objs);
 
     /* Set up initial camera angle to begin ray-casting onto scene objects */
-    let world_height_max = 20.;
+    let world_height_max = 8.;
     let camera = Camera::new(
-        Point3::new(0., 1., 0.),
-        Point3::new(0., 1., 200.),
+        Point3::new(0., 0., 0.),
+        Point3::new(0., 0., 1.),
         Vector3::new(0., 1., 0.),
-        120.,
+        90.,
         image_height as f64 / image_width as f64,
         world_height_max,
     );
 
+    /* Render basic perspective image */
+    render(
+        &camera,
+        &scene,
+        image_height,
+        image_width,
+        "/home/sway/Documents/CS419_Renders/basic_persp.png"
+    );
+
+    /* Set up alternate perspective */
+    let alt_angle_cam = Camera::new(
+        Point3::new(0.6, 0., 0.),
+        Point3::new(0., 0., 1.),
+        Vector3::new(0., 1., 0.),
+        90.,
+        image_height as f64 / image_width as f64,
+        world_height_max,
+    );
+
+    render(
+        &alt_angle_cam,
+        &scene,
+        image_height,
+        image_width,
+        "/home/sway/Documents/CS419_Renders/alt_persp.png"
+    );
+}
+
+fn render(cam: &Camera, scene: &Scene, img_height: u32, img_width: u32, path: &str) {
     /* Get pixel color values for first perspective image */
     let mut pixel_colors: Vec<u8> = vec!();
-    for pix_y in 0..image_height {
-        for pix_x in 0..image_width {
-            let ray = camera.calc_ray(pix_x, pix_y, CameraMode::Perspective);
+    for pix_y in 0..img_height {
+        for pix_x in 0..img_width {
+            let u = pix_x as f64 / (img_width - 1) as f64;
+            let v = pix_y as f64 / (img_height - 1) as f64;
+            let ray = cam.calc_ray(u, v, CameraMode::Perspective);
             let closest_obj = scene.find_nearest_obj(&ray);
 
             let pixel_color: Color;
             if closest_obj.is_none() {
-                pixel_color = Scene::calc_bg_color(image_height, image_width, pix_y);
+                pixel_color = Scene::calc_bg_color(img_height, img_width, pix_y);
             } else {
                 pixel_color = closest_obj.unwrap().get_material().base_color;
             }
 
-            println!("{:?}", pixel_color);
             pixel_colors.push(pixel_color.x);  // r
             pixel_colors.push(pixel_color.y);  // g
             pixel_colors.push(pixel_color.z);  // b
         }
     }
 
-    //println!("{:?}", pixel_colors);
-
-    imgrender::render_image(image_height, image_width, &pixel_colors, "/home/sway/Documents/CS419_Renders/basic_persp.png");
+    imgrender::render_image(img_height, img_width, &pixel_colors, path);
 }
