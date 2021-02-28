@@ -25,7 +25,7 @@ fn main() {
 
     /* Initialize objects for rendering in the scene. */
     let sphere = Sphere::new(
-        Point3::new(0., 0., -5.), 
+        Point3::new(0., 2., 5.), 
         0.5,
         Material::new(0, 0, 200)
     );
@@ -35,9 +35,9 @@ fn main() {
         Material::new(255, 0, 0)
     );
     let triangle = Triangle::new(
-        Point3::new(1., 2., -2.),
-        Point3::new(1., 3., -1.),
-        Point3::new(2., 2., -2.),
+        Point3::new(1., 2., 2.),
+        Point3::new(1., 3., 1.),
+        Point3::new(2., 2., 2.),
         Material::new(0, 255, 0)
     );
 
@@ -47,9 +47,9 @@ fn main() {
     /* Set up initial camera angle to begin ray-casting onto scene objects */
     let world_height_max = 8.;
     let camera = Camera::new(
-        Point3::new(0., 0., 0.),
-        Point3::new(0., 0., 1.),
-        Vector3::new(0., 1., 0.),
+        Point3::new(0., 0.5, 0.),
+        Point3::new(0., 0.5, 1.),
+        Vector3::new(0., -1., 0.),
         90.,
         image_height as f64 / image_width as f64,
         world_height_max,
@@ -66,9 +66,9 @@ fn main() {
 
     /* Set up alternate perspective */
     let alt_angle_cam = Camera::new(
-        Point3::new(0.6, 0., 0.),
-        Point3::new(0., 0., 1.),
-        Vector3::new(0., 1., 0.),
+        Point3::new(0.6, 0.5, 0.),
+        Point3::new(0., 0.5, 1.),
+        Vector3::new(0., -1., 0.),
         90.,
         image_height as f64 / image_width as f64,
         world_height_max,
