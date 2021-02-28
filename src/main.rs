@@ -61,6 +61,7 @@ fn main() {
         &scene,
         image_height,
         image_width,
+        CameraMode::Perspective,
         "/home/sway/Documents/CS419_Renders/basic_persp.png"
     );
 
@@ -79,18 +80,29 @@ fn main() {
         &scene,
         image_height,
         image_width,
+        CameraMode::Perspective,
         "/home/sway/Documents/CS419_Renders/alt_persp.png"
+    );
+
+    /* Render original camera with ortho persp */
+    render(
+        &alt_angle_cam,
+        &scene,
+        image_height,
+        image_width,
+        CameraMode::Orthographic,
+        "/home/sway/Documents/CS419_Renders/basic_ortho.png"
     );
 }
 
-fn render(cam: &Camera, scene: &Scene, img_height: u32, img_width: u32, path: &str) {
+fn render(cam: &Camera, scene: &Scene, img_height: u32, img_width: u32, mode: CameraMode, path: &str) {
     /* Get pixel color values for first perspective image */
     let mut pixel_colors: Vec<u8> = vec!();
     for pix_y in 0..img_height {
         for pix_x in 0..img_width {
             let u = pix_x as f64 / (img_width - 1) as f64;
             let v = pix_y as f64 / (img_height - 1) as f64;
-            let ray = cam.calc_ray(u, v, CameraMode::Perspective);
+            let ray = cam.calc_ray(u, v, &mode);
             let closest_obj = scene.find_nearest_obj(&ray);
 
             let pixel_color: Color;
