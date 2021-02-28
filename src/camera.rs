@@ -40,14 +40,21 @@ impl Camera {
             origin: lookfrom,
             horiz_vec: viewport_width * u,
             vert_vec: viewport_height * v,
-            lower_left_corner: lookfrom - (viewport_width * u / 2.) - (viewport_height * v) - w
+            lower_left_corner: lookfrom - (viewport_width * u / 2.) - (viewport_height * v / 2.) - w
         }
     }
 
     /// 
     /// Calculate the ray associated with a given x & y coordinate in world space.
     /// 
-    pub fn calc_ray(&self, x: u32, y: u32, mode: CameraMode) -> Ray {
-        Ray::new(&self.origin, &(self.lower_left_corner + (x as f64) * self.horiz_vec + (y as f64) * self.vert_vec - self.origin))
+    pub fn calc_ray(&self, u: f64, v: f64, mode: CameraMode) -> Ray {
+        match mode {
+            CameraMode::Perspective => {
+                Ray::new(&self.origin, &(self.lower_left_corner + u * self.horiz_vec + v * self.vert_vec - self.origin))
+            },
+            CameraMode::Orthographic => {
+                Ray::new(&(self.lower_left_corner + u * self.horiz_vec + v * self.vert_vec), &Vector3::new(0., 0., 1.))
+            },
+        }
     }
 }
