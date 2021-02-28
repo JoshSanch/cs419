@@ -88,10 +88,10 @@ impl SceneObject for Plane {
     fn calc_intersect_time(&self, ray: &Ray) -> Option<Vec<f64>> {
         // Check if the plane and pixel ray are parallel, which is a sign that they do not intersect.
         let discriminant = ray.dir.dot(&self.normal_vec);
-        if float_eq!(discriminant, 0., abs <= 0.0000000001) {
+        if float_eq!(discriminant, 0., abs <= 0.00000001) {
             None 
         } else {
-            let top = &(self.origin - ray.orig).dot(&self.normal_vec);
+            let top = (self.origin - ray.orig).dot(&self.normal_vec);
             let bottom = discriminant;
             return Some(vec!(top / bottom))
         }

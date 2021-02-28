@@ -20,7 +20,7 @@ impl Scene {
             match intersect_times {
                 None => continue,
                 Some(times) => {
-                    let mut lowest_time = -1.;
+                    let mut lowest_time = -0.000001;
                     for time in times {
                         if time > lowest_time && time > 0. {
                             lowest_time = time;
