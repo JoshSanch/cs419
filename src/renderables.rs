@@ -4,17 +4,18 @@ use super::rays::Ray;
 
 use nalgebra::Vector3;
 use float_eq::float_eq;
+use core::fmt::Debug;
 
 /**
  * Interface that contains essential rendering methods for any object that appears in a scene.
  */
-pub trait SceneObject {
+pub trait SceneObject: Debug {
     /// Determines the time that the given ray intersects the object. If there is no intersection, then 
     /// return None.
     fn calc_intersect_time(&self, ray: &Ray) -> Option<Vec<f64>>;
 
     /// Generic getter for accessing the unique material from a scene.
-    fn get_material(&self) -> &Material;
+    fn get_material(&self) -> &Material;   
 }
 
 /**
@@ -64,6 +65,12 @@ impl SceneObject for Sphere {
     }
 }
 
+impl Debug for Sphere {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "Sphere: {} {}", self.origin, self.radius)
+    }
+}
+
 /**
  * Plane object for rendering planes.
  * Planes are defined by a point on the plane and a vector representing the surface normal of the plane.
@@ -91,14 +98,20 @@ impl SceneObject for Plane {
         if float_eq!(discriminant, 0., abs <= 0.00000001) {
             None 
         } else {
-            let top = (self.origin - ray.orig).dot(&self.normal_vec);
-            let bottom = discriminant;
-            return Some(vec!(top / bottom))
+            let num = (self.origin - ray.orig).dot(&self.normal_vec);
+            let denom = discriminant;
+            return Some(vec!(num / denom))
         }
     }
 
     fn get_material(&self) -> &Material {
         &self.mat
+    }
+}
+
+impl Debug for Plane {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "Plane: {} {}", self.origin, self.normal_vec)
     }
 }
 
@@ -157,5 +170,11 @@ impl SceneObject for Triangle {
 
     fn get_material(&self) -> &Material {
         &self.mat
+    }
+}
+
+impl Debug for Triangle {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "Triangle: {} {} {}", self.point_one, self.point_two, self.point_three)
     }
 }
