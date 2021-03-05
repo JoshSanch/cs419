@@ -1,0 +1,10 @@
+[package]
+name = "rtiow"
+version = "0.1.0"
+authors = ["Joshua Sanchez <joshuaesanch@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+png = "0.16.8"
+nalgebra = "0.24.1"
+float_eq = "0.5.0"
