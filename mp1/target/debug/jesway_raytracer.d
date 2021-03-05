@@ -1,0 +1,1 @@
+/home/sway/Projects/cs419/target/debug/jesway_raytracer: /home/sway/Projects/cs419/src/camera.rs /home/sway/Projects/cs419/src/color.rs /home/sway/Projects/cs419/src/imgrender.rs /home/sway/Projects/cs419/src/main.rs /home/sway/Projects/cs419/src/rays.rs /home/sway/Projects/cs419/src/renderables.rs /home/sway/Projects/cs419/src/scene.rs
