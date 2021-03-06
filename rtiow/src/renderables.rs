@@ -1,7 +1,3 @@
-use nalgebra::Vector3;
-
-use crate::shading::Color;
-use crate::utils::Unit;
 use crate::renderutil::Point3;
 use crate::renderutil::Ray;
 use crate::renderutil::Hittable;
