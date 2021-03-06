@@ -38,8 +38,6 @@ fn main() {
             let ray = Ray::new(origin, lower_left_corner + u*horizontal + v*vertical - origin);
             let pixel_color = calc_ray_color(&ray);
 
-            println!("{:?}", pixel_color);
-
             pixel_colors.push(pixel_color.x);
             pixel_colors.push(pixel_color.y);
             pixel_colors.push(pixel_color.z);
