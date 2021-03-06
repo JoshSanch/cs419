@@ -23,15 +23,16 @@ impl Ray {
 
 
 /// Ray intersection data for renderable objects
+#[derive(Copy, Clone, Default)]
 pub struct HitRecord {
     pub hitpt: Point3,
     pub hit_time: f64,
-    normal: Vector3<f64>,
-    front_face: bool
+    pub normal: Vector3<f64>,
+    pub front_face: bool
 }
 
 impl HitRecord {
-    pub fn set_face_normal(&self, ray: &Ray, outward_normal: &Vector3<f64>) {
+    pub fn set_face_normal(&mut self, ray: &Ray, outward_normal: &Vector3<f64>) {
         self.front_face = ray.dir.dot(outward_normal) < 0.;
         self.normal = if self.front_face {*outward_normal} else {*outward_normal * -1.};
     }
@@ -49,12 +50,12 @@ pub struct HittableList {
 
 impl Hittable for HittableList {
     fn hit(&self, ray: &Ray, t_min: f64, t_max: f64, record: &mut HitRecord) -> bool {
-        let mut temp_rec: HitRecord;
+        let mut temp_rec = HitRecord::default();
         let mut hit_anything = false;
-        let closest_so_far = t_max;
+        let mut closest_so_far = t_max;
 
         for obj in self.objects.iter() {
-           if obj.hit(ray, t_min, t_max, &mut temp_rec) {
+           if obj.hit(ray, t_min, closest_so_far, &mut temp_rec) {
                hit_anything = true;
                closest_so_far = temp_rec.hit_time;
                *record = temp_rec;
@@ -66,5 +67,17 @@ impl Hittable for HittableList {
 }
 
 impl HittableList {
-    
+    pub fn new() -> HittableList {
+        HittableList {
+            objects: vec!()
+        }
+    }
+
+    pub fn clear(&mut self) {
+        self.objects.clear();
+    }
+
+    pub fn add(&mut self, object: Box<dyn Hittable>) {
+        self.objects.push(object);
+    }
 }
