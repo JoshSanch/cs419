@@ -2,11 +2,12 @@ mod imgrender;
 mod shading;
 mod utils;
 mod renderables;
+mod renderutil;
 
 use nalgebra::Vector3;
 
-use renderables::Point3;
-use renderables::Ray;
+use renderutil::Point3;
+use renderutil::Ray;
 use shading::calc_ray_color;
 use imgrender::render_image;
 
