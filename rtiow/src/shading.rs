@@ -2,22 +2,9 @@ use nalgebra::Vector3;
 use crate::Ray;
 use crate::utils::Unit;
 use crate::Point3;
+use crate::renderables::Sphere;
 
 pub type Color = Vector3<u8>;
-
-pub fn hit_sphere(center: &Point3, radius: f64, r: &Ray) -> f64 {
-    let sphere_center = r.orig - center;
-    let a = r.dir.magnitude().powi(2);
-    let half_b = sphere_center.dot(&r.dir);
-    let c = sphere_center.magnitude().powi(2) - radius * radius;
-    let discriminant = half_b.powi(2) - a * c;
-    
-    if discriminant < 0. {
-        return -1.0;
-    } else {
-        return (-half_b - discriminant.sqrt()) / a;
-    }
-}
 
 pub fn calc_ray_color(r: &Ray) -> Color {
     let sphere_orig = Point3::new(0.,0.,-1.);

@@ -1,24 +1,44 @@
 use nalgebra::Vector3;
+
 use crate::shading::Color;
 use crate::utils::Unit;
+use crate::renderutil::Point3;
+use crate::renderutil::Ray;
+use crate::renderutil::Hittable;
+use crate::renderutil::HitRecord;
 
-/// Alias for a 3D vector of doubles. Used to signify that the vector represents a point.
-pub type Point3 = Vector3<f64>;
-
-pub struct Ray {
-    pub orig: Point3,
-    pub dir: Vector3<f64>
+pub struct Sphere {
+    center: Point3,
+    radius: f64
 }
 
-impl Ray {
-    pub fn new(origin: Point3, direction: Vector3<f64>) -> Ray {
-        Ray {
-            orig: origin,
-            dir: direction
-        }
-    }
+impl Hittable for Sphere {
+    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64, record: &mut HitRecord) -> bool {
+        let sphere_center = &ray.orig - self.center;
+        let a = &ray.dir.magnitude().powi(2);
+        let half_b = sphere_center.dot(&ray.dir);
+        let c = sphere_center.magnitude().powi(2) - self.radius.powi(2);
+        let discriminant = half_b.powi(2) - a * c;
+        
+        if discriminant < 0. {
+            return false;
+        } 
 
-    pub fn find_pos_at(&self, t: f64) -> Point3 {
-        self.orig + t * self.dir
+        let disc_sqrt = discriminant.sqrt();
+        let mut root = (-half_b - disc_sqrt) / a;
+        if root < t_min || t_max < root {
+            root = (-half_b + disc_sqrt) / a;
+            if root < t_min || t_max < root {
+                return false;
+            }
+        }
+
+        // Modify hit record passed to the function.
+        record.hit_time = root;
+        record.hitpt = ray.find_pos_at(root);
+        let outward_normal = (record.hitpt - self.center) / self.radius;
+        record.set_face_normal(ray, &outward_normal);
+        
+        return true;
     }
 }
