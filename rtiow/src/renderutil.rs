@@ -41,3 +41,30 @@ impl HitRecord {
 pub trait Hittable {
     fn hit(&self, ray: &Ray, t_min: f64, t_max: f64, record: &mut HitRecord) -> bool;
 }
+
+/// Create store for hittable objects
+pub struct HittableList {
+    objects: Vec<Box<dyn Hittable>>
+}
+
+impl Hittable for HittableList {
+    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64, record: &mut HitRecord) -> bool {
+        let mut temp_rec: HitRecord;
+        let mut hit_anything = false;
+        let closest_so_far = t_max;
+
+        for obj in self.objects.iter() {
+           if obj.hit(ray, t_min, t_max, &mut temp_rec) {
+               hit_anything = true;
+               closest_so_far = temp_rec.hit_time;
+               *record = temp_rec;
+           }
+        }
+
+        return hit_anything;
+    }
+}
+
+impl HittableList {
+    
+}
