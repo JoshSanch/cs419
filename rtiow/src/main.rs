@@ -8,6 +8,8 @@ use nalgebra::Vector3;
 
 use renderutil::Point3;
 use renderutil::Ray;
+use renderutil::HittableList;
+use renderables::Sphere;
 use shading::calc_ray_color;
 use imgrender::render_image;
 
@@ -16,6 +18,14 @@ fn main() {
     let aspect_ratio = 16.0 / 9.0;
     let image_width = 400;
     let image_height = (image_width as f64 / aspect_ratio) as u32;
+
+    // World
+    let mut world = HittableList::new();
+    let sphere1 = Box::new(Sphere::new(Point3::new(0., 0., -1.,), 0.5));
+    let sphere2 = Box::new(Sphere::new(Point3::new(0., 0., -1.,), 0.5));
+
+    world.add(sphere1);
+    world.add(sphere2);
 
     // Camera
     let viewport_height = 2.0;
@@ -37,7 +47,7 @@ fn main() {
             let u = x as f64 / (image_width-1) as f64;
             let v = y as f64 / (image_height-1) as f64;
             let ray = Ray::new(origin, lower_left_corner + u*horizontal + v*vertical - origin);
-            let pixel_color = calc_ray_color(&ray);
+            let pixel_color = calc_ray_color(&ray, &world);
 
             pixel_colors.push(pixel_color.x);
             pixel_colors.push(pixel_color.y);
@@ -45,5 +55,5 @@ fn main() {
         }
     }
 
-    render_image(image_height, image_width, &pixel_colors, "/home/sway/Documents/CS419_Renders/test_sec4.png");
+    render_image(image_height, image_width, &pixel_colors, "../img_output/test_img.png");
 }
