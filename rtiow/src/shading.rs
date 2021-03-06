@@ -11,7 +11,7 @@ pub type Color = Vector3<u8>;
 pub fn calc_ray_color(r: &Ray, world: &Hittable) -> Color {
     let mut rec = HitRecord::default();
     if world.hit(r, 0., f64::INFINITY, &mut rec) {
-        let float_vec = 0.5 * (rec.normal + Vector3::new(255., 255., 255.));
+        let float_vec = 0.5 * (255. * rec.normal + Vector3::new(255., 255., 255.));
         return Color::new(float_vec.x as u8, float_vec.y as u8, float_vec.z as u8);
     }
 
