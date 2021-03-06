@@ -81,3 +81,34 @@ impl HittableList {
         self.objects.push(object);
     }
 }
+
+pub struct Camera {
+    pub origin: Point3,
+    pub lower_left_corner: Point3,
+    pub horiz: Vector3<f64>,
+    pub vert: Vector3<f64>
+}
+
+impl Camera {
+    pub fn new() -> Camera {
+        let aspect_ratio = 16.0 / 9.0;
+        let viewport_height = 2.0;
+        let viewport_width = aspect_ratio * viewport_height;
+        let focal_length = 1.0;
+
+        let origin = Point3::new(0., 0., 0.);
+        let horizontal = Vector3::new(viewport_width, 0., 0.);
+        let vertical = Vector3::new(0., viewport_height, 0.);
+
+        Camera {
+            origin: origin,
+            horiz: horizontal,
+            vert: vertical,
+            lower_left_corner: origin - horizontal / 2. - vertical / 2. - Vector3::new(0., 0., focal_length)
+        }
+    }
+
+    pub fn calc_ray(&self, u: f64, v: f64) -> Ray {
+        Ray::new(self.origin, self.lower_left_corner + u * self.horiz + v * self.vert - self.origin)
+    }
+}
