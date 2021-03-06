@@ -1,14 +1,12 @@
 use nalgebra::Vector3;
 use crate::Ray;
 use crate::utils::Unit;
-use crate::Point3;
-use crate::renderables::Sphere;
 use crate::renderutil::HitRecord;
 use crate::renderutil::Hittable;
 
 pub type Color = Vector3<u8>;
 
-pub fn calc_ray_color(r: &Ray, world: &Hittable) -> Color {
+pub fn calc_ray_color(r: &Ray, world: &dyn Hittable) -> Color {
     let mut rec = HitRecord::default();
     if world.hit(r, 0., f64::INFINITY, &mut rec) {
         let float_vec = 0.5 * (255. * rec.normal + Vector3::new(255., 255., 255.));
