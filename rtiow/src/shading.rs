@@ -3,19 +3,16 @@ use crate::Ray;
 use crate::utils::Unit;
 use crate::Point3;
 use crate::renderables::Sphere;
+use crate::renderutil::HitRecord;
+use crate::renderutil::Hittable;
 
 pub type Color = Vector3<u8>;
 
-pub fn calc_ray_color(r: &Ray) -> Color {
-    let sphere_orig = Point3::new(0.,0.,-1.);
-    let hit_time = hit_sphere(&sphere_orig, 0.5, r);
-
-    if hit_time > 0. {
-        let normal = (r.find_pos_at(hit_time) - Vector3::new(0.,0.,-1.)).unit();
-        let float_vec = 0.5 * 255. * Vector3::new(normal.x + 1., normal.y + 1., normal.z + 1.);
-        println!("{:?}", float_vec);
-        
-        return Color::new(float_vec.x as u8, float_vec.y as u8, float_vec.z as u8)
+pub fn calc_ray_color(r: &Ray, world: &Hittable) -> Color {
+    let mut rec = HitRecord::default();
+    if world.hit(r, 0., f64::INFINITY, &mut rec) {
+        let float_vec = 0.5 * (rec.normal + Vector3::new(255., 255., 255.));
+        return Color::new(float_vec.x as u8, float_vec.y as u8, float_vec.z as u8);
     }
 
     let unit_direction = r.dir.unit();

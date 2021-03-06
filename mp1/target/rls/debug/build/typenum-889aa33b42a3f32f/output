@@ -1,2 +1,0 @@
-cargo:rustc-env=TYPENUM_BUILD_CONSTS=/home/sway/Projects/cs419/mp1/target/rls/debug/build/typenum-889aa33b42a3f32f/out/consts.rs
-cargo:rustc-env=TYPENUM_BUILD_OP=/home/sway/Projects/cs419/mp1/target/rls/debug/build/typenum-889aa33b42a3f32f/out/op.rs
