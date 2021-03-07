@@ -1,4 +1,5 @@
 use nalgebra::Vector3;
+use crate::utils::Unit;
 
 /// Alias for a 3D vector of doubles. Used to signify that the vector represents a point.
 pub type Point3 = Vector3<f64>;
@@ -101,18 +102,20 @@ impl Camera {
         let viewport_height = 2. * (theta / 2.).tan();
         let viewport_width = aspect_ratio * viewport_height;
 
-        let focal_length = 1.0;
+        let w = (cam_origin - look_at).unit();
+        let u = vup.cross(&w).unit();
+        let v = w.cross(&u);
 
-        let origin = Point3::new(0., 0., 0.);
-        let horizontal = Vector3::new(viewport_width, 0., 0.);
-        let vertical = Vector3::new(0., viewport_height, 0.);
+        let origin = cam_origin;
+        let horizontal = viewport_width * u;
+        let vertical = viewport_height * v;
 
         Camera {
             origin: origin,
             horiz: horizontal,
             vert: vertical,
-            lower_left_corner: origin - horizontal / 2. - vertical / 2. - Vector3::new(0., 0., focal_length),
-            forward: -1 * w
+            lower_left_corner: origin - horizontal / 2. - vertical / 2. - w,
+            forward: -1. * w
         }
     }
 
