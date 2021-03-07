@@ -71,7 +71,12 @@ impl Hittable for Plane {
             return false;
         }
 
-        record.hit_time = (self.orig - ray.orig).dot(&self.normal);
+        let hit_time = (self.orig - ray.orig).dot(&self.normal);
+        if hit_time < t_min || hit_time > t_max {
+            return false;
+        }
+
+        record.hit_time = hit_time; 
         record.hitpt = ray.find_pos_at(record.hit_time);
         record.set_face_normal(&ray, &self.normal);
 
