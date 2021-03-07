@@ -1,3 +1,5 @@
+use nalgebra::Vector3;
+
 use crate::renderutil::Point3;
 use crate::renderutil::Ray;
 use crate::renderutil::Hittable;
@@ -44,6 +46,35 @@ impl Hittable for Sphere {
         let outward_normal = (record.hitpt - self.center) / self.radius;
         record.set_face_normal(ray, &outward_normal);
         
+        return true;
+    }
+}
+
+pub struct Plane {
+    orig: Point3,
+    normal: Vector3<f64>
+}
+
+impl Plane {
+    pub fn new(origin: Point3, norm: Vector3<f64>) -> Plane {
+        Plane {
+            orig: origin,
+            normal: norm
+        }
+    }
+}
+
+impl Hittable for Plane {
+    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64, record: &mut HitRecord) -> bool {
+        let discriminant = ray.dir.dot(&self.normal);
+        if discriminant == 0. {
+            return false;
+        }
+
+        record.hit_time = (self.orig - ray.orig).dot(&self.normal);
+        record.hitpt = ray.find_pos_at(record.hit_time);
+        record.set_face_normal(&ray, &self.normal);
+
         return true;
     }
 }
