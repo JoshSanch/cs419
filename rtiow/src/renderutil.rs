@@ -82,18 +82,25 @@ impl HittableList {
     }
 }
 
+pub enum CameraMode {
+    Orthographic,
+    Perspective
+}
+
 pub struct Camera {
     pub origin: Point3,
     pub lower_left_corner: Point3,
     pub horiz: Vector3<f64>,
-    pub vert: Vector3<f64>
+    pub vert: Vector3<f64>,
+    pub forward: Vector3<f64>    
 }
 
 impl Camera {
-    pub fn new() -> Camera {
-        let aspect_ratio = 16.0 / 9.0;
-        let viewport_height = 2.0;
+    pub fn new(cam_origin: Point3, look_at: Point3, vup: Vector3<f64>, vfov: f64, aspect_ratio: f64) -> Camera {
+        let theta = vfov.to_radians();
+        let viewport_height = 2. * (theta / 2.).tan();
         let viewport_width = aspect_ratio * viewport_height;
+
         let focal_length = 1.0;
 
         let origin = Point3::new(0., 0., 0.);
@@ -104,11 +111,19 @@ impl Camera {
             origin: origin,
             horiz: horizontal,
             vert: vertical,
-            lower_left_corner: origin - horizontal / 2. - vertical / 2. - Vector3::new(0., 0., focal_length)
+            lower_left_corner: origin - horizontal / 2. - vertical / 2. - Vector3::new(0., 0., focal_length),
+            forward: -1 * w
         }
     }
 
-    pub fn calc_ray(&self, u: f64, v: f64) -> Ray {
-        Ray::new(self.origin, self.lower_left_corner + u * self.horiz + v * self.vert - self.origin)
+    pub fn calc_ray(&self, u: f64, v: f64, mode: &CameraMode) -> Ray {
+        match mode {
+            CameraMode::Perspective => {
+                Ray::new(self.origin, self.lower_left_corner + u * self.horiz + v * self.vert - self.origin)
+            },
+            CameraMode::Orthographic => {
+                Ray::new(self.lower_left_corner + u * self.horiz + v * self.vert, self.forward)
+            },
+        }
     }
 }
