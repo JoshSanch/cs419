@@ -1,153 +1,105 @@
-use super::color::Material;
-use super::rays::Point3;
-use super::rays::Ray;
-
 use nalgebra::Vector3;
-use float_eq::float_eq;
-use core::fmt::Debug;
 
-/**
- * Interface that contains essential rendering methods for any object that appears in a scene.
- */
-pub trait SceneObject: Debug {
-    /// Determines the time that the given ray intersects the object. If there is no intersection, then 
-    /// return None.
-    fn calc_intersect_time(&self, ray: &Ray) -> Option<Vec<f64>>;
+use crate::renderutil::Point3;
+use crate::renderutil::Ray;
+use crate::renderutil::Hittable;
+use crate::renderutil::HitRecord;
 
-    /// Generic getter for accessing the unique material from a scene.
-    fn get_material(&self) -> &Material;   
-}
-
-/**
- * Sphere object for rendering spheres.
- * 
- */
 pub struct Sphere {
-    origin: Point3,
-    radius: f64,
-    mat: Material
+    center: Point3,
+    radius: f64
 }
 
 impl Sphere {
-    pub fn new(orig: Point3, rad: f64, material: Material) -> Sphere{
-       Sphere {
-           origin: orig,
-           radius: rad,
-           mat: material
-       } 
-    }
-}
-
-impl SceneObject for Sphere {
-    fn calc_intersect_time(&self, ray: &Ray) -> Option<Vec<f64>> {
-        let f = ray.orig - self.origin;
-        let a = ray.dir.dot(&ray.dir);
-        let b = 2. * (f.dot(&ray.dir));
-        let c = f.dot(&f) - self.radius.powi(2);
-
-        let discriminant = b.powi(2) - 4. * a * c;
-        if discriminant < 0. {
-            None
-        } else if float_eq!(discriminant, 0., abs <= 0.0000000001) {
-            // Single intersection point
-            let t = (-1. * b) / (2. * a);
-            Some(vec!(t))
-        } else {
-            // Two intersection points
-            let t_0 = (-1. * b - discriminant.sqrt()) / (2. * a);
-            let t_1 = (-1. * b + discriminant.sqrt()) / (2. * a);
-            Some(vec!(t_0, t_1))
+    pub fn new(cent: Point3, rad: f64) -> Sphere{
+        Sphere {
+            center: cent,
+            radius: rad
         }
     }
+}
 
-    fn get_material(&self) -> &Material {
-        &self.mat
+impl Hittable for Sphere {
+    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64, record: &mut HitRecord) -> bool {
+        let sphere_center = &ray.orig - self.center;
+        let a = &ray.dir.magnitude().powi(2);
+        let half_b = sphere_center.dot(&ray.dir);
+        let c = sphere_center.magnitude().powi(2) - self.radius.powi(2);
+        let discriminant = half_b.powi(2) - a * c;
+        
+        if discriminant < 0. {
+            return false;
+        } 
+
+        let disc_sqrt = discriminant.sqrt();
+        let mut root = (-half_b - disc_sqrt) / a;
+        if root < t_min || t_max < root {
+            root = (-half_b + disc_sqrt) / a;
+            if root < t_min || t_max < root {
+                return false;
+            }
+        }
+
+        // Modify hit record passed to the function.
+        record.hit_time = root;
+        record.hitpt = ray.find_pos_at(root);
+        let outward_normal = (record.hitpt - self.center) / self.radius;
+        record.set_face_normal(ray, &outward_normal);
+        
+        return true;
     }
 }
 
-impl Debug for Sphere {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "Sphere: {} {}", self.origin, self.radius)
-    }
-}
-
-/**
- * Plane object for rendering planes.
- * Planes are defined by a point on the plane and a vector representing the surface normal of the plane.
- */
 pub struct Plane {
-    origin: Point3,
-    normal_vec: Vector3<f64>,
-    mat: Material
+    orig: Point3,
+    normal: Vector3<f64>
 }
 
 impl Plane {
-    pub fn new(orig: Point3, normal: Vector3<f64>, material: Material) -> Plane {
+    pub fn new(origin: Point3, norm: Vector3<f64>) -> Plane {
         Plane {
-            origin: orig,
-            normal_vec: normal,
-            mat: material
+            orig: origin,
+            normal: norm
         }
     }
 }
 
-impl SceneObject for Plane {
-    fn calc_intersect_time(&self, ray: &Ray) -> Option<Vec<f64>> {
-        // Check if the plane and pixel ray are parallel, which is a sign that they do not intersect.
-        let discriminant = ray.dir.dot(&self.normal_vec);
-        if float_eq!(discriminant, 0., abs <= 0.00000001) {
-            None 
-        } else {
-            let num = (self.origin - ray.orig).dot(&self.normal_vec);
-            let denom = discriminant;
-            return Some(vec!(num / denom))
+impl Hittable for Plane {
+    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64, record: &mut HitRecord) -> bool {
+        let discriminant = ray.dir.dot(&self.normal);
+        if discriminant == 0. {
+            return false;
         }
-    }
 
-    fn get_material(&self) -> &Material {
-        &self.mat
+        let hit_time = (self.orig - ray.orig).dot(&self.normal);
+        if hit_time < t_min || hit_time > t_max {
+            return false;
+        }
+
+        record.hit_time = hit_time; 
+        record.hitpt = ray.find_pos_at(record.hit_time);
+        record.set_face_normal(&ray, &self.normal);
+
+        return true;
     }
 }
 
-impl Debug for Plane {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "Plane: {} {}", self.origin, self.normal_vec)
-    }
-}
-
-/**
- * Triangle object for rendering triangles.
- * Triangles are defined by three points.
- */
 pub struct Triangle {
     point_one: Point3,
     point_two: Point3,
     point_three: Point3,
-    mat: Material
 }
 
-impl Triangle {
-    pub fn new(p1: Point3, p2: Point3, p3: Point3, material: Material) -> Triangle {
-        Triangle {
-            point_one: p1,
-            point_two: p2,
-            point_three: p3,
-            mat: material
-        }
-    }
-}
-
-impl SceneObject for Triangle {
-    fn calc_intersect_time(&self, ray: &Ray) -> Option<Vec<f64>> {
+impl Hittable for Triangle {
+    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64, record: &mut HitRecord) -> bool {
         // Adapted from https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
-        let epsilon = 0.0000001;
         let edge1 = self.point_two - self.point_one;
         let edge2 = self.point_three - self.point_one;
         let h = ray.dir.cross(&edge2);
         let a = edge1.dot(&h);
 
-        if float_eq!(a, 0., abs <= epsilon) {
-            return None;
+        if a == 0. {
+            return false;
         }
 
         let f = 1.0 / a;
@@ -155,26 +107,42 @@ impl SceneObject for Triangle {
         let u = f * s.dot(&h);
 
         if u < 0.0 || u > 1.0 {
-            return None;
+            return false;
         }
 
         let q = s.cross(&edge1);
         let v = f * ray.dir.dot(&q);
 
-        if v < 0.0 || u + v > 1.0 {
-            return None;
+        if v < t_min || u + v > 1.0 {
+            return false;
         } else {
-            return Some(vec!(f * edge2.dot(&q)));
-        }
-    }
+            record.hit_time = f * edge2.dot(&q);
+            record.hitpt = ray.find_pos_at(record.hit_time);
+            record.set_face_normal(&ray, &self.calc_surface_normal());
 
-    fn get_material(&self) -> &Material {
-        &self.mat
+            return true;
+        }
     }
 }
 
-impl Debug for Triangle {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "Triangle: {} {} {}", self.point_one, self.point_two, self.point_three)
+impl Triangle {
+    pub fn new(pt1: Point3, pt2: Point3, pt3: Point3) -> Triangle {
+        Triangle {
+            point_one: pt1,
+            point_two: pt2,
+            point_three: pt3
+        }
+    }
+
+    pub fn calc_surface_normal(&self) -> Vector3<f64> {
+        // Adapted from https://www.khronos.org/opengl/wiki/Calculating_a_Surface_Normal
+        let u = self.point_two - self.point_one;
+        let v = self.point_three - self.point_one;
+
+        let nx = u.y * v.z - u.z * v.y;
+        let ny = u.z * v.x - u.x * v.z;
+        let nz = u.x * v.y - u.y * v.x;
+
+        Vector3::new(nx, ny, nz)
     }
 }

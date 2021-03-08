@@ -1,122 +1,64 @@
-mod rays;
 mod imgrender;
-mod color;
-mod camera;
+mod shading;
+mod utils;
 mod renderables;
-mod scene;
+mod renderutil;
 
 use nalgebra::Vector3;
 
-use rays::Point3;
-use color::Material;
-use camera::Camera;
-use camera::CameraMode;
-use scene::Scene;
-use renderables::SceneObject;
+use renderutil::Point3;
+use renderutil::Ray;
+use renderutil::HittableList;
+use renderutil::Camera;
+use renderutil::CameraMode;
+
 use renderables::Sphere;
 use renderables::Plane;
 use renderables::Triangle;
-use color::Color;
+
+use shading::calc_ray_color;
+use imgrender::render_image;
 
 fn main() {
-    // Min assignment spec for MP1 is 500x500 image resolution
-    let image_height: u32 = 500;
-    let image_width: u32 = 900;
+    // Image
+    let aspect_ratio = 16.0 / 9.0;
+    let image_width = 400;
+    let image_height = (image_width as f64 / aspect_ratio) as u32;
 
-    /* Initialize objects for rendering in the scene. */
-    let sphere = Sphere::new(
-        Point3::new(0., 2., 5.), 
-        0.5,
-        Material::new(0, 0, 200)
-    );
-    let plane = Plane::new(
-        Point3::new(0., 0., 0.), 
-        Vector3::new(0., 1., 0.), 
-        Material::new(255, 0, 0)
-    );
-    let triangle = Triangle::new(
-        Point3::new(1., 2., 2.),
-        Point3::new(1., 3., 1.),
-        Point3::new(2., 2., 2.),
-        Material::new(0, 255, 0)
-    );
+    // World
+    let mut world = HittableList::new();
+    let sphere1 = Box::new(Sphere::new(Point3::new(0., 0., -1.,), 0.5));
+    let plane = Box::new(Plane::new(Point3::new(0., -2.0, 0.), Vector3::new(0., -1., 0.)));
+    let triangle = Box::new(Triangle::new(
+        Point3::new(0., 0., -5.),
+        Point3::new(0., -4., -4.),
+        Point3::new(2., 0., -4.)
+    ));
 
-    let objs: Vec<Box<dyn SceneObject>> = vec!(Box::new(sphere), Box::new(plane), Box::new(triangle));
-    let scene = Scene::new(objs);
+    world.add(sphere1);
+    world.add(plane);
+    world.add(triangle);
 
-    /* Set up initial camera angle to begin ray-casting onto scene objects */
-    let world_height_max = 8.;
-    let camera = Camera::new(
-        Point3::new(0., 0.5, 0.),
-        Point3::new(0., 0.5, 1.),
-        Vector3::new(0., -1., 0.),
-        90.,
-        image_height as f64 / image_width as f64,
-        world_height_max,
-    );
+    // Camera
+    let cam = Camera::new(Point3::new(-2., 2., 1.), Point3::new(0., 0., -1.), Vector3::new(0., 1., 0.), 90., aspect_ratio);
 
-    /* Render basic perspective image */
-    render(
-        &camera,
-        &scene,
-        image_height,
-        image_width,
-        CameraMode::Perspective,
-        "/home/sway/Documents/CS419_Renders/basic_persp.png"
-    );
+    // Render
+    println!("P3\n{} {} \n255\n", image_width, image_height);
 
-    /* Set up alternate perspective */
-    let alt_angle_cam = Camera::new(
-        Point3::new(0.6, 0.5, 0.),
-        Point3::new(0., 0.5, 1.),
-        Vector3::new(0., -1., 0.),
-        90.,
-        image_height as f64 / image_width as f64,
-        world_height_max,
-    );
+    let mut pixel_colors = vec!();
+    for y in 0..image_height {
+        println!("Scanlines remaining: {}", image_height - 1 - y);
+        for x in 0..image_width {
+            let u = x as f64 / (image_width-1) as f64;
+            let v = y as f64 / (image_height-1) as f64;
+            let ray = cam.calc_ray(u, v, &CameraMode::Orthographic);
+            let pixel_color = calc_ray_color(&ray, &world);
 
-    render(
-        &alt_angle_cam,
-        &scene,
-        image_height,
-        image_width,
-        CameraMode::Perspective,
-        "/home/sway/Documents/CS419_Renders/alt_persp.png"
-    );
-
-    /* Render original camera with ortho persp */
-    render(
-        &alt_angle_cam,
-        &scene,
-        image_height,
-        image_width,
-        CameraMode::Orthographic,
-        "/home/sway/Documents/CS419_Renders/basic_ortho.png"
-    );
-}
-
-fn render(cam: &Camera, scene: &Scene, img_height: u32, img_width: u32, mode: CameraMode, path: &str) {
-    /* Get pixel color values for first perspective image */
-    let mut pixel_colors: Vec<u8> = vec!();
-    for pix_y in 0..img_height {
-        for pix_x in 0..img_width {
-            let u = pix_x as f64 / (img_width - 1) as f64;
-            let v = pix_y as f64 / (img_height - 1) as f64;
-            let ray = cam.calc_ray(u, v, &mode);
-            let closest_obj = scene.find_nearest_obj(&ray);
-
-            let pixel_color: Color;
-            if closest_obj.is_none() {
-                pixel_color = Scene::calc_bg_color(img_height, img_width, pix_y);
-            } else {
-                pixel_color = closest_obj.unwrap().get_material().base_color;
-            }
-
-            pixel_colors.push(pixel_color.x);  // r
-            pixel_colors.push(pixel_color.y);  // g
-            pixel_colors.push(pixel_color.z);  // b
+            pixel_colors.push(pixel_color.x);
+            pixel_colors.push(pixel_color.y);
+            pixel_colors.push(pixel_color.z);
         }
     }
 
-    imgrender::render_image(img_height, img_width, &pixel_colors, path);
+    render_image(image_height, image_width, &pixel_colors, "../img_output/test_img.png");
 }
