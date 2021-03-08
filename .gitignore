@@ -2,4 +2,4 @@
 .vscode
 
 /* Rustc */
-*/target
+*target/

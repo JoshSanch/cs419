@@ -60,5 +60,5 @@ fn main() {
         }
     }
 
-    render_image(image_height, image_width, &pixel_colors, "../img_output/test_img.png");
+    render_image(image_height, image_width, &pixel_colors, "img_output/test_img.png");
 }
